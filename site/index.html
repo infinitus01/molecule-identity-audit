@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Molecule Identity Audit</title>
+  <meta name="description" content="Static read-only demo for molecular identity and evidence-boundary validation.">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17201c;
+      --muted: #5a6660;
+      --paper: #f7f8f4;
+      --panel: #ffffff;
+      --line: #dfe5dd;
+      --teal: #147a73;
+      --teal-soft: #dcefeb;
+      --amber: #b7791f;
+      --amber-soft: #fff4d6;
+      --red: #b42318;
+      --red-soft: #ffe4df;
+      --green: #20744a;
+      --green-soft: #e2f4e9;
+      --code: #1f2933;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    main {
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1120px, calc(100vw - 40px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 48px 0 26px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(20, 122, 115, 0.10), rgba(183, 121, 31, 0.08)),
+        var(--paper);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 16px;
+      color: var(--teal);
+      font-size: 0.83rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 4px var(--teal-soft);
+    }
+
+    h1 {
+      max-width: 780px;
+      margin: 0;
+      font-size: clamp(2.25rem, 5vw, 4.5rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 1.22rem;
+    }
+
+    .hero-boundary {
+      display: inline-flex;
+      max-width: 760px;
+      margin-top: 16px;
+      padding: 10px 12px;
+      border: 1px solid rgba(180, 35, 24, 0.28);
+      border-radius: 8px;
+      background: rgba(255, 228, 223, 0.62);
+      color: #7a211a;
+      font-size: 0.96rem;
+      font-weight: 700;
+    }
+
+    .status-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 6px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .content {
+      padding: 32px 0 44px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 14px 32px rgba(23, 32, 28, 0.06);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0;
+    }
+
+    .panel-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .badge-fail {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .badge-stop {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .audit-body {
+      padding: 18px 22px 22px;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .identity-box {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+    }
+
+    .identity-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      color: var(--code);
+      overflow-wrap: anywhere;
+    }
+
+    .not-equal {
+      display: grid;
+      place-items: center;
+      min-width: 44px;
+      color: var(--red);
+      font-size: 1.8rem;
+      font-weight: 900;
+    }
+
+    .result-chain {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .result {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+    }
+
+    .result strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 0.95rem;
+    }
+
+    .result span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .status-dot {
+      width: 14px;
+      height: 14px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 0 4px var(--red-soft);
+    }
+
+    .status-dot.stop {
+      background: var(--amber);
+      box-shadow: 0 0 0 4px var(--amber-soft);
+    }
+
+    .status-dot.pass {
+      background: var(--green);
+      box-shadow: 0 0 0 4px var(--green-soft);
+    }
+
+    .contract {
+      display: grid;
+      gap: 12px;
+    }
+
+    .contract-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 14px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .contract-row:last-child {
+      border-bottom: 0;
+    }
+
+    .contract-key {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .contract-value {
+      min-width: 0;
+      font-size: 0.95rem;
+    }
+
+    .guardrail {
+      margin-top: 24px;
+      padding: 18px 20px;
+      border: 1px solid var(--teal);
+      border-left-width: 5px;
+      border-radius: 8px;
+      background: var(--teal-soft);
+    }
+
+    .guardrail h2 {
+      margin: 0 0 8px;
+      font-size: 1.02rem;
+      letter-spacing: 0;
+    }
+
+    .guardrail p {
+      margin: 0;
+      color: #315e5a;
+    }
+
+    .boundaries {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .boundary {
+      min-height: 76px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    footer {
+      padding: 24px 0 34px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 860px) {
+      .grid,
+      .compare,
+      .boundaries {
+        grid-template-columns: 1fr;
+      }
+
+      .not-equal {
+        min-height: 30px;
+      }
+
+      .contract-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .shell {
+        width: min(100vw - 24px, 1120px);
+      }
+
+      .hero {
+        padding-top: 32px;
+      }
+
+      .panel-header {
+        display: block;
+      }
+
+      .badge {
+        display: inline-flex;
+        margin-top: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <p class="eyebrow">Scientific Identity Audit</p>
+        <h1>Molecule Identity Audit</h1>
+        <p class="lead">Before asking what a molecule does, verify what molecule it is.</p>
+        <div class="hero-boundary">This demo does not predict activity, ADMET, toxicity, or clinical success.</div>
+        <div class="status-strip" aria-label="Demo constraints">
+          <span class="pill">Static public demo</span>
+          <span class="pill">Read-only</span>
+          <span class="pill">No upload</span>
+          <span class="pill">No backend</span>
+          <span class="pill">No API</span>
+          <span class="pill">No data collection</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="shell">
+        <div class="grid">
+          <article class="panel" aria-labelledby="fixture-title">
+            <div class="panel-header">
+              <div>
+                <h2 id="fixture-title" class="panel-title">Fixed Demo Fixture</h2>
+                <p class="panel-subtitle">A molecule identity mismatch closes the downstream evidence gate.</p>
+              </div>
+              <span class="badge badge-fail">Fail-closed</span>
+            </div>
+            <div class="audit-body">
+              <div class="compare" aria-label="Identity mismatch comparison">
+                <div class="identity-box">
+                  <span class="identity-label">Submitted SMILES</span>
+                  <code>CC1=CC=C(NC(=O)C2=CC=C(CN3CCN(C)CC3)C=C2)C=C1</code>
+                </div>
+                <div class="not-equal" aria-label="does not equal">&ne;</div>
+                <div class="identity-box">
+                  <span class="identity-label">Asserted InChIKey</span>
+                  <code>DECLARED-INCHIKEY-MISMATCH</code>
+                </div>
+              </div>
+
+              <div class="result-chain">
+                <div class="result">
+                  <span class="status-dot"></span>
+                  <div>
+                    <strong>STRUCTURE_IDENTITY_FAIL</strong>
+                    <span>Computed identity does not match the asserted molecular record.</span>
+                  </div>
+                </div>
+                <div class="result">
+                  <span class="status-dot stop"></span>
+                  <div>
+                    <strong>Pharmacology generation stopped</strong>
+                    <span>No activity, ADMET, docking, or clinical inference is generated from a failed identity state.</span>
+                  </div>
+                </div>
+                <div class="result">
+                  <span class="status-dot stop"></span>
+                  <div>
+                    <strong>Data room closed</strong>
+                    <span>The artifact remains available for audit, but downstream claims remain blocked.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <aside class="panel" aria-labelledby="contract-title">
+            <div class="panel-header">
+              <div>
+                <h2 id="contract-title" class="panel-title">Validation Contract</h2>
+                <p class="panel-subtitle">Pass structure parsing only when evidence boundaries remain intact.</p>
+              </div>
+              <span class="badge badge-stop">Boundary</span>
+            </div>
+            <div class="contract">
+              <div class="contract-row">
+                <div class="contract-key">Parse</div>
+                <div class="contract-value">Structure can parse and sanitize without making identity claims.</div>
+              </div>
+              <div class="contract-row">
+                <div class="contract-key">Identity</div>
+                <div class="contract-value">Computed identifiers must match the asserted record before downstream use.</div>
+              </div>
+              <div class="contract-row">
+                <div class="contract-key">Evidence</div>
+                <div class="contract-value">No database no-match is treated as proof of a fake molecule.</div>
+              </div>
+              <div class="contract-row">
+                <div class="contract-key">Stage Gate</div>
+                <div class="contract-value">A false PASS is worse than a conservative STOP.</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="guardrail">
+          <h2>Public Demo Boundary</h2>
+          <p>This is not an AI drug discovery platform. This demo only illustrates molecular identity and evidence-boundary validation.</p>
+        </div>
+
+        <div class="boundaries" aria-label="Non-goals">
+          <div class="boundary">No pharmacology claim</div>
+          <div class="boundary">No ADMET prediction</div>
+          <div class="boundary">No clinical claim</div>
+          <div class="boundary">No investment advice</div>
+          <div class="boundary">No molecule recommendation</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      Static read-only demo. No upload, backend, API request, analytics, cookies, or data collection are included in this page.
+    </div>
+  </footer>
+</body>
+</html>
