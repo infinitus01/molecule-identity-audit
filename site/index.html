@@ -123,6 +123,31 @@
       white-space: nowrap;
     }
 
+    .hero-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .hero-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 13px;
+      border: 1px solid var(--teal);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--teal);
+      font-size: 0.94rem;
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .hero-link:hover {
+      background: var(--teal-soft);
+    }
+
     .content {
       padding: 32px 0 44px;
     }
@@ -401,6 +426,9 @@
           <span class="pill">No backend</span>
           <span class="pill">No API</span>
           <span class="pill">No data collection</span>
+        </div>
+        <div class="hero-links" aria-label="Project links">
+          <a class="hero-link" href="https://github.com/infinitus01/molecule-identity-audit" rel="noopener noreferrer">GitHub methodology repo</a>
         </div>
       </div>
     </section>
